@@ -6,7 +6,7 @@ This simple Python scripts lets you upload your checked scripts to Google Drive 
 2. pip
 3. Google Drive API
 
-We'll look at how to properly configure your computer so that you can run the Python script. If you have these installed, please skip this section.
+We'll look at how to properly configure your computer so that you can run the Python script. If you have these installed, please skip to **Using the Script**.
 
 ## Python ##
 Download the latest version of Python from https://www.python.org/downloads/ and install. This should not be a problem. Restart your computer to ensure that .py files are associated with the Python interpreter.
