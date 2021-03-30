@@ -83,13 +83,16 @@ def main():
         
         else:
             print('There are ' + str(len(folders)) + ' matches for the current name in the present root. Please choose ID of the folder' + 
-                ' to upload to.')
+                ' to upload to. Please type -1 and press Enter if you wish to create a new folder.')
             for i in range(len(folders)):
                 possibility = service.files().get(fileId=folders[i].get('id')).execute()
                 print(str(i+1) + ': ' + possibility['name'])
             while True:
                 try: 
                     choice = int(input('Choice: '))
+                    if choice == -1:
+                        upload_root = create_new_student_folder(parent_id, f, service)
+                        break
                     if choice >= 1 and choice <= len(folders):
                         upload_root = folders[choice-1]
                         break
