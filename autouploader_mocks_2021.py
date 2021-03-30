@@ -17,7 +17,13 @@ def main():
 
     if os.path.exists('token.json'):
         os.remove('token.json')
-        
+
+    try:
+        files = listdir('Scripts')
+    except FileNotFoundError:
+        print('The Scripts folder was not found in this directory. Exiting...')
+        return
+
     """Shows basic usage of the Drive v3 API.
     Prints the names and ids of the first 10 files the user has access to.
     """
@@ -40,8 +46,6 @@ def main():
             token.write(creds.to_json())
 
     service = build('drive', 'v3', credentials=creds)
-
-    files = listdir('Scripts')
 
     while True:
         parent_id = input('Please enter the root folder ID (http://drive.google.com/.../folders/<ID>) carefully\n')
