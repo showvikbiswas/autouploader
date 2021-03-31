@@ -320,6 +320,10 @@ def create_new_student_folder(parent_id, file_name, service):
             possible_duplicates = search(query, service)
 
             if len(possible_duplicates) == 0:
+                # Let user choose whether they want to try again
+                print('The folder name you entered does not currently exist in Drive. Do you want to confirm or try again? <y to confirm, any other key to try again>')
+                if m.getch().decode('ASCII') != 'y':
+                    continue
                 break
 
             if len(possible_duplicates) == 1:
