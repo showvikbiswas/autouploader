@@ -8,15 +8,27 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 import msvcrt as m
-import atexit
+from pythonping import ping
+import change_permissions
+from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/drive']
+
+IDs = (('OL MAY 21', '1Gbc8HwWG5soUBkAa33kM_PAOlwbT9L_L'), ('AS MAY 21', '1ISm564KqrH3l0YF-ToDHn0jND4ddni37'))
+
+man_upload = list()
+new_folders = list()
+parent_id = str()
+
 
 def main():
 
     if os.path.exists('token.json'):
         os.remove('token.json')
+
+    if os.path.exists('new_folders.txt'):
+        os.remove('new_folders.txt')
 
     try:
         files = listdir('Scripts')
@@ -46,23 +58,33 @@ def main():
             token.write(creds.to_json())
 
     service = build('drive', 'v3', credentials=creds)
+    
+    for i in range(len(IDs)):
+        print(str(i+1) + ': ' + IDs[i][0])
 
     while True:
-        parent_id = input('Please enter the root folder ID (http://drive.google.com/.../folders/<ID>) carefully\n')
         try:
+            choice = int(input('\nChoose ID of the parent folder (1, 2, 3, etc): '))
+            if choice < 1 or choice > len(IDs):
+                print('Choice outside range')
+                continue
+            
+            parent_id = IDs[choice - 1][1]
             parent_folder = service.files().get(fileId=parent_id).execute()
-            if parent_folder['mimeType'] != 'application/vnd.google-apps.folder':
-                raise Exception
-            print('Found parent folder: ' + parent_folder['name'])
-            print('Do you want to select this as the parent folder? <y/n>')
+            print('Are you sure you want to set the parent folder to ' + IDs[choice - 1][0] + '? <y to confirm, any other key to retry>')
+            
             if m.getch().decode('ASCII') != 'y':
                 continue
-        except:
-            print('CAREFULLY (HINT: CTRL+C CTRL+V)')
+            print('Parent folder set to ' + parent_folder['name'] + '\n')
+            break
+        except ValueError:
+            print('Not a number')
+            continue
+        except HttpError:
+            print('Access to this folder is denied. Please close this program and restart using start.bat if you have logged in to the wrong account.')
             continue
 
-        print('Parent folder set to ' + parent_folder['name'])
-        break
+    
 
     queue = list()
 
@@ -87,9 +109,12 @@ def main():
             if len(tokens) > 1:
                 query = ("name contains '" + tokens[0] + "' and name contains '" + tokens[1] + "' and "
                     + "mimeType = 'application/vnd.google-apps.folder' and '" + parent_id + "' in parents and trashed = False")
-            else:
+            elif len(tokens) == 1:
                 query = ("name contains '" + tokens[0] + "' and "+ "mimeType = 'application/vnd.google-apps.folder' and '" + parent_id + 
                         "' in parents and trashed = False")
+            else:
+                query = ("name = '" + f + "' and " + "mimeType = 'application/vnd.google-apps.folder' and '" + parent_id + 
+                "' in parents and trashed = False")
                 
             folders = search(query, service)
 
@@ -129,39 +154,50 @@ def main():
 
         if len(folders) == 0:
             print('There are no matches for ' + item)
-            print('Do you still want to upload the file? <press y to confirm, any other key to cancel>')
+            print('Do you still want to upload the file? <y to confirm, any other key to cancel>')
             if m.getch().decode('ASCII') != 'y':
-                print('Upload of ' + item + ' was cancelled by user.')
+                print('Upload of ' + item + ' was cancelled by user.\n')
+                man_upload.append(item)
                 continue
+            
             upload_root = create_new_student_folder(parent_id, item, service)
         
         elif len(folders) == 1:
             print('There is one partial match for ' + item + ' with name ' +
                 service.files().get(fileId=folders[0].get('id')).execute()['name'])
-            print('Do you still want to upload the file? <press y to confirm, any other key to cancel>')
+            
+            print('Do you still want to upload the file? <y to confirm, any other key to cancel>')
             if m.getch().decode('ASCII') != 'y':
                 print('Upload of ' + item + ' was cancelled by user.')
+                man_upload.append(item)
                 continue
-            print('Do you want to upload to ' + service.files().get(fileId=folders[0].get('id')).execute()['name'] + '? <press y to confirm, any other key to upload to a new folder>')
+            
+            print('Do you want to upload to ' + service.files().get(fileId=folders[0].get('id')).execute()['name'] + '? <y to confirm, n to cancel, any other key to upload to a new folder>')
             pressedKey = m.getch().decode('ASCII')
+            
             if pressedKey == 'y':
                 upload_root = folders[0]
+            elif pressedKey == 'n':
+                print('Upload of ' + item + ' was cancelled by user.')
+                man_upload.append(item)
+                continue
             else:
                 upload_root = create_new_student_folder(parent_id, f, service)
         
         else:
-            print('There are ' + str(len(folders)) + ' matches for the current name in the present root.')
+            print('There are ' + str(len(folders)) + ' matches for ' + item + ' in the present root.')
             
             for i in range(len(folders)):
                 possibility = service.files().get(fileId=folders[i].get('id')).execute()
                 print(str(i+1) + ': ' + possibility['name'])
             
-            print('Do you still want to upload the file? <press y to confirm, any other key to cancel>')
+            print('Do you still want to upload the file? <y to confirm, any other key to cancel>')
             if m.getch().decode('ASCII') != 'y':
                 print('Upload of ' + item + ' was cancelled by user.')
+                man_upload.append(item)
                 continue
             
-            print('Please choose ID of the folder to upload to. Please type -1 and press Enter if you wish to create a new folder.')
+            print('Please choose ID of the folder (1, 2, 3...) to upload to. Please type -1 and press Enter if you wish to create a new folder.')
             
             while True:
                 try: 
@@ -178,8 +214,52 @@ def main():
                     print('Not a number. Try again.')
 
         upload(upload_root, item, parent_folder, query, service)
-        print()
-            
+        print('\n')
+        
+    # Print uploads which have been cancelled by user.
+    if len(man_upload) > 0:
+        print('You have decided to not upload the following files.')
+        for item in man_upload:
+            print(item)
+
+        if os.path.exists('skipped uploads.txt'):
+            print('A skipped uploads.txt file already exists. Please back up the information in the file if needed.'
+                + 'WARNING: The file will be overwritten if continued, and this is irreversible.')
+
+            print('\n<y to continue, n to skip writing>\n')
+            pressedKey = m.getch().decode('ASCII')
+            while True:
+                if pressedKey == 'y':
+                    break
+                if pressedKey == 'n':
+                    return
+                pressedKey = m.getch().decode('ASCII')                    
+
+        with open('manual_upload.txt', 'w') as file:
+            for item in man_upload:
+                file.write(item + '\n')
+
+        print('A list of these files has been generated in manual_upload.txt\n')
+
+    # Print new folders made by the script
+    if len(new_folders) > 0:
+        print('New folders added to the Drive:')
+        for item in new_folders:
+            print(item)
+
+        with open('new_folders.txt', 'w') as file:
+            for item in new_folders:
+                file.write(item + '\n')
+
+        print('Attempting to share new folders with email addresses.\n')
+        change_permissions.main()
+
+    if len(man_upload) > 0:
+        print('These files could not be uploaded:')
+        for item in man_upload:
+            print(item)
+                    
+
         
 def upload(upload_root, file_name, parent_folder, query, service):
     upload_root_id = upload_root.get('id')
@@ -217,7 +297,6 @@ def upload(upload_root, file_name, parent_folder, query, service):
         print('Successfully uploaded ' + uploadfile['name'] + ' to ' + parent_folder['name'] + '/' + upload_folder['name'])
     except:
         print('An error occurred. File ' + file_name + ' could not be uploaded.')
-    
             
 
 def search(query, service):
@@ -233,7 +312,7 @@ def error():
 def create_new_student_folder(parent_id, file_name, service):
     while True:
         folder_name = input('Please choose a folder name for ' + file_name + '\n')
-        print('Are you sure you want to name the new folder ' + folder_name + '? <y/n>')
+        print('Are you sure you want to name the new folder ' + folder_name + '? <y to confirm, any other key to retry>')
         if m.getch().decode('ASCII') == 'y':
             # Check for existing folders with given name
             query = ("name = '" + folder_name +  "' and "
@@ -244,13 +323,14 @@ def create_new_student_folder(parent_id, file_name, service):
                 break
 
             if len(possible_duplicates) == 1:
-                print('There seems to be a folder with the specified name. Do you want to upload to the existing folder? <y/n>')
+                print('There seems to be a folder with the specified name. Do you want to upload to the existing folder? <y to confirm, any other key to skip>')
                 if m.getch().decode('ASCII') == 'y':
                     upload_root = possible_duplicates[0]
                     return upload_root
 
             elif len(possible_duplicates) > 1:
                 print('Oops. There seems to be multiple folders with the specified name. Too lazy to implement this. Upload manually for now. :p')
+                man_upload.append(file_name)
                 return
     
     file_metadata = {
@@ -261,6 +341,7 @@ def create_new_student_folder(parent_id, file_name, service):
 
     try:
         upload_root = service.files().create(body=file_metadata, fields='id').execute()
+        new_folders.append(folder_name)
         return upload_root
     except Exception:
         error()
@@ -284,6 +365,7 @@ def create_mock_folder(mock_folder_list, service, upload_root_id):
     
     else:
         print('Warning: There may be duplicate "MOCKS" folders. Please upload this file manually.')
+        
         
 
 
