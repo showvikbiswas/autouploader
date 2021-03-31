@@ -14,7 +14,7 @@ import re
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 
-def main():
+def main(parent_id):
 
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -36,7 +36,6 @@ def main():
 
     service = build('drive', 'v3', credentials=creds)
 
-    parent_id = '1wR2buGuQdMBk-wrw6MbEdUC_dA8OLhSw'
     new_folders = list()
     man_upload = list()
 

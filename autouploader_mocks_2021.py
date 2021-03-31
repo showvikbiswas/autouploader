@@ -8,7 +8,6 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 import msvcrt as m
-from pythonping import ping
 import change_permissions
 from googleapiclient.errors import HttpError
 
@@ -235,11 +234,11 @@ def main():
                     return
                 pressedKey = m.getch().decode('ASCII')                    
 
-        with open('manual_upload.txt', 'w') as file:
+        with open('skipped uploads.txt', 'w') as file:
             for item in man_upload:
                 file.write(item + '\n')
 
-        print('A list of these files has been generated in manual_upload.txt\n')
+        print('A list of these files has been generated in skipped uploads.txt\n')
 
     # Print new folders made by the script
     if len(new_folders) > 0:
@@ -252,13 +251,12 @@ def main():
                 file.write(item + '\n')
 
         print('Attempting to share new folders with email addresses.\n')
-        change_permissions.main()
+        change_permissions.main(parent_id)
 
     if len(man_upload) > 0:
         print('These files could not be uploaded:')
         for item in man_upload:
             print(item)
-                    
 
         
 def upload(upload_root, file_name, parent_folder, query, service):
