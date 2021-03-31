@@ -28,7 +28,7 @@ To use the program, download all the files and place them in a single folder. No
 1. You have to choose the parent directory where all the student folders are placed.
 2. The script then searches the "Scripts" folder in your computer and tries to upload each PDF to the designated folder only if it finds a perfect match of a folder name with the file name.
 3. If not, the script skips that PDF and keeps track of it.
-4. Once all the perfect matches are uploaded, the skipped ones are then handled. You can choose to upload these or not. The ones that you plan to not upload at all are listed in a file named manual_upload.txt which you can use for future reference.
+4. Once all the perfect matches are uploaded, the skipped ones are then handled. You can choose to upload these or not. The ones that you plan to not upload at all are listed in a file named **manual_upload.txt** which you can use for future reference.
 5. Once these are handled, the script then tries to share the **newly created folders** with email addresses. If you don't know any email address, you can simply skip the sharing process for that folder. However, if you skip sharing a folder, you will have to share that folder manually later.
 
 **Important:** Do not delete any files that are automatically created by the script. Altering any of these might cause the script to crash.
