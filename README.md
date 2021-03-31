@@ -1,6 +1,6 @@
 # AutoUploader v1.0
 
-This simple Python scripts lets you upload your checked scripts to Google Drive with ease. To use this, you will need the following prerequisites:
+This simple Python script lets you upload your checked scripts to Google Drive with ease. To use this, you will need the following prerequisites:
 
 1. Python
 2. pip
