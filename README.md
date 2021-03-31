@@ -32,4 +32,5 @@ To use the program, download all the files and place them in a single folder. No
 5. Once these are handled, the script then tries to share the **newly created folders** with email addresses. If you don't know any email address, you can simply skip the sharing process for that folder. However, if you skip sharing a folder, you will have to share that folder manually later.
 
 **Important:** Do not delete any files that are automatically created by the script. Altering any of these might cause the script to crash.
+
 **Important:** In the case of connectivity issues, close the program and restart once you have ensured a proper internet connection. I have not dealt with connectivity issues properly. I intend to, in the future.
